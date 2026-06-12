@@ -20,7 +20,7 @@ def _infer_provider(model: str) -> str:
 class Settings:
     # Server
     host: str = field(default_factory=lambda: os.getenv("HOST", "0.0.0.0"))
-    port: int = field(default_factory=lambda: int(os.getenv("PORT", "8000")))
+    port: int = field(default_factory=lambda: int(os.getenv("PORT", "8080")))
     environment: str = field(default_factory=lambda: os.getenv("ENVIRONMENT", "development"))
     debug: bool = field(default_factory=lambda: os.getenv("DEBUG", "false").lower() == "true")
 

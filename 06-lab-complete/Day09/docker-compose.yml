@@ -4,7 +4,7 @@ services:
   agent:
     build: .
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
       - ENVIRONMENT=staging
       - APP_NAME=Production AI Agent
@@ -16,7 +16,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
