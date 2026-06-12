@@ -20,7 +20,7 @@ def check(name: str, passed: bool, detail: str = "") -> dict:
 
 def run_checks():
     results = []
-    base = os.path.dirname(__file__)
+    base = os.path.join(os.path.dirname(__file__), "Day09")
 
     print("\n" + "=" * 55)
     print("  Production Readiness Check — Day 12 Lab")

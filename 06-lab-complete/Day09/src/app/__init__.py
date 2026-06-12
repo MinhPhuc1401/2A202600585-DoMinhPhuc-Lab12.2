@@ -1,1 +1,0 @@
-"""Shopping assistant solution package."""
