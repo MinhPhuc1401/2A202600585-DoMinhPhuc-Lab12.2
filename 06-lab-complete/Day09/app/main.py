@@ -35,9 +35,28 @@ _is_ready = False
 _request_count = 0
 _error_count = 0
 
+from threading import Lock
+assistant_lock = Lock()
+
+def get_assistant():
+    global assistant
+    if assistant is None:
+        with assistant_lock:
+            if assistant is None:
+                try:
+                    from app.agent.graph import ShoppingAssistant
+                    logger.info(json.dumps({"event": "initializing_agent_lazy"}))
+                    new_assistant = ShoppingAssistant(settings)
+                    new_assistant.policy_store.ensure_index(settings.policy_path)
+                    assistant = new_assistant
+                    logger.info(json.dumps({"event": "agent_initialized_lazy"}))
+                except Exception as e:
+                    logger.error(json.dumps({"event": "agent_initialization_lazy_failed", "error": str(e)}))
+    return assistant
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _is_ready, assistant
+    global _is_ready
     logger.info(json.dumps({
         "event": "startup",
         "app": settings.app_name,
@@ -45,17 +64,7 @@ async def lifespan(app: FastAPI):
         "environment": settings.environment,
     }))
     
-    # Initialize ShoppingAssistant
-    try:
-        from app.agent.graph import ShoppingAssistant
-        logger.info(json.dumps({"event": "initializing_agent"}))
-        assistant = ShoppingAssistant(settings)
-        # Ensure Chroma DB index is built/loaded
-        assistant.policy_store.ensure_index(settings.policy_path)
-        logger.info(json.dumps({"event": "agent_initialized"}))
-    except Exception as e:
-        logger.error(json.dumps({"event": "agent_initialization_failed", "error": str(e)}))
-
+    # Instant startup to prevent Railway health check timeouts
     _is_ready = True
     logger.info(json.dumps({"event": "ready"}))
 
@@ -153,11 +162,13 @@ async def ask_agent(
         "client": str(request.client.host) if request.client else "unknown",
     }))
 
-    if assistant:
-        result = assistant.ask(body.question)
+    # Load assistant lazily
+    active_assistant = get_assistant()
+    if active_assistant:
+        result = active_assistant.ask(body.question)
         answer = result.get("final_answer", "")
     else:
-        # Fallback to mock if assistant not initialized
+        # Fallback to mock if assistant initialization failed
         from utils.mock_llm import ask as llm_ask
         answer = llm_ask(body.question)
 
