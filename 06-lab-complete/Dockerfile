@@ -10,7 +10,7 @@ WORKDIR /build
 RUN apt-get update && apt-get install -y gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY Day09/requirements.txt .
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir -r requirements.txt
@@ -28,9 +28,9 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 
 # Copy application
-COPY app/ ./app/
-COPY utils/ ./utils/
-COPY data/ ./data/
+COPY Day09/app/ ./app/
+COPY Day09/utils/ ./utils/
+COPY Day09/data/ ./data/
 
 RUN chown -R agent:agent /app
 
